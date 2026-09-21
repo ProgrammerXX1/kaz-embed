@@ -1,0 +1,6 @@
+# label rank alpha lr epochs maxsteps datafile  (screening: maxsteps 600 ~40min each)
+a_r16a16_lr2e5 16 16 2e-5 1 600 train_triplets2.jsonl
+b_r32a32_lr2e5 32 32 2e-5 1 600 train_triplets2.jsonl
+c_r16a16_lr5e5 16 16 5e-5 1 600 train_triplets2.jsonl
+d_r32a16_lr3e5 32 16 3e-5 1 600 train_triplets2.jsonl
+e_r64a32_lr2e5 64 32 2e-5 1 600 train_triplets2.jsonl

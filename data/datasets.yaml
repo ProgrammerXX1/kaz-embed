@@ -1,0 +1,117 @@
+# Манифест источников для казахской эмбеддинг-модели.
+# Собран 4 research-агентами (research/01-datasets.md). repo_id проверены где возможно;
+# помеченные verify: true нужно подтвердить перед скачиванием.
+# use: pretrain | pairs | parallel | eval | synthetic-src
+# gated: требует принятия условий + HF-токена.
+
+pretrain_monolingual:
+  - repo_id: kz-transformers/multidomain-kazakh-dataset   # MDBKD
+    use: pretrain
+    size: "24.9M текстов / 2.09B токенов"
+    license: Apache-2.0        # самая безопасная для коммерции
+    gated: false
+  - repo_id: uonlp/CulturaX
+    subset: kk
+    use: pretrain
+    size: "2.73M docs / 2.8B токенов"
+    license: "ODC-BY / mC4+OSCAR terms"
+    gated: true
+  - repo_id: HuggingFaceFW/fineweb-2
+    subset: kaz_Cyrl
+    use: pretrain
+    size: "3.38M rows / 6.86 GB"
+    license: ODC-BY
+    gated: false
+  - repo_id: HPLT/HPLT3.0
+    subset: kk
+    use: pretrain
+    size: "~7.34B токенов"
+    license: CC0-ish / see terms
+    gated: false
+    verify: true
+  - repo_id: TilQazyna/Til-Corpus
+    use: pretrain
+    size: "204 GB / 58.8M docs (крупнейший)"
+    license: see-terms
+    gated: true
+    verify: true
+  - repo_id: wikimedia/wikipedia
+    subset: 20231101.kk
+    use: pretrain
+    license: CC-BY-SA-4.0
+    gated: false
+
+pairs_native:
+  - repo_id: issai/kazqad-retrieval        # BEIR-style corpus+queries+qrels
+    use: pairs
+    note: "800k Wiki-пассажей, ~61k переведённых NQ-триплетов; PRIMARY eval+train"
+    license: CC-BY-SA-4.0
+    gated: true
+  - repo_id: issai/kazqad
+    use: pairs
+    license: CC-BY-SA-4.0
+    gated: true
+  - repo_id: issai/kazparc                 # KazParC параллельный
+    use: parallel
+    size: "372k человеческих + ~1.8M синтет. kk<->en/ru/tr"
+    license: CC-BY-4.0
+    gated: false
+  - repo_id: kurumikz/Zerde-QA-50K
+    use: pairs
+    size: "51k синтетических QA"
+    license: see-terms
+    gated: false
+    verify: true
+
+pairs_nli_sts:
+  - source: "GitHub: lksenel/Kardes-NLU"    # единственный нативный kk NLI+STS+COPA
+    subset: kk
+    use: pairs
+    note: "премиум-триплеты для контрастива; не HF — тянуть с GitHub"
+    verify: true
+
+parallel_opus:   # OPUS kk-ru / kk-en — фильтровать по LaBSE margin!
+  - repo_id: allenai/nllb
+    subset: eng_Latn-kaz_Cyrl
+    use: parallel
+    size: "~34.6M mined pairs (шумные)"
+    filter: "LaBSE cosine > 0.7 + round-trip"
+    gated: false
+  - repo_id: Dauren-Nur/kaz_eng_parallel
+    use: parallel
+    size: "377k"
+    gated: false
+    verify: true
+  - repo_id: SagiAbd/KazLit-Parallel
+    use: parallel
+    size: "71k"
+    gated: false
+    verify: true
+  - source: "OPUS: MultiCCAligned(432k), XLEnt(87k), WikiMatrix(33k), OpenSubtitles(54k), Tatoeba"
+    subset: kk-ru
+    use: parallel
+    filter: "LaBSE margin"
+
+eval:
+  - repo_id: Arailym-tleubayeva/KazakhTextDuplicates   # THE STS/retrieval бенчмарк
+    use: eval
+    note: "BGE-M3 Spearman 0.538 / retrieval MRR 0.806; v2.0 = 7 регимов — verify config"
+    license: CC-BY-4.0
+    gated: false
+    verify: true   # отделить v1.0 vs v2.0
+  - repo_id: Kundyzka/informatics_kaz      # QA comparative-analysis
+    use: eval
+    size: "~7700 Q-context пар (CS)"
+    metrics: "Acc@1, MRR, ROC-AUC"
+    gated: false
+  - source: "mteb kk-подмножества: BelebeleRetrieval(kaz_Cyrl), SIB200Classification, FloresBitextMining"
+    use: eval
+
+synthetic_sources:   # инструменты для генерации/перевода пар (не датасеты)
+  - repo_id: issai/tilmash                 # MT kk<->ru/en для перевода mMARCO/AllNLI/STS-B
+    use: synthetic-src
+  - repo_id: issai/LLama-3.1-KazLLM-1.0-8B # генерация kk-запросов из пассажей (AWQ/GGUF на 3090)
+    use: synthetic-src
+    license: CC-BY-NC   # ← только research!
+  - translate_targets: ["mMARCO", "AllNLI (SNLI+MNLI)", "STS-B"]
+    note: "перевести в kk через tilmash, отфильтровать LaBSE"

@@ -1,0 +1,20 @@
+# data & artifacts (huge / license-sensitive — live on the training box, not in git)
+data/raw/
+data/pairs/
+models/
+runs/
+results/
+*.jsonl
+*.safetensors
+*.bin
+# python
+__pycache__/
+*.pyc
+.venv/
+# secrets — never commit
+*.token
+.hf_token
+.env
+*.pat
+.netrc
+.git-credentials
