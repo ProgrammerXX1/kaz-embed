@@ -8,28 +8,37 @@ Everything here is **code + research notes + honest results**. The datasets, mod
 and large intermediate files are **not** in this repo (they live on the training box); see
 `data/datasets.yaml` for exact Hugging Face sources.
 
-## TL;DR (current honest state)
+## TL;DR (honest state)
 
 - We evaluate on the **full KazQAD corpus** (825k passages, 1929 native test queries) — the
   real retrieval setting, not a small pool.
-- **BAAI/bge-m3 is a very strong baseline on Kazakh** and hard to beat with a quick fine-tune.
-- Naive full fine-tuning **regressed** it (catastrophic forgetting). Aggressive LoRA
-  **collapsed** the embedding space (mean pairwise cosine 0.82 vs healthy 0.32).
-- A **gentle LoRA** (r16, α16, lr2e-5) fixes collapse and gets closest so far; **WiSE-FT**
-  weight interpolation squeaks marginally above baseline on a screening corpus.
-- Work in progress: **CachedGIST loss + WiSE-FT + in-domain synthetic queries** to get a
-  clean, significant win. Results below are updated as runs finish.
+- **BAAI/bge-m3 is a very strong baseline on Kazakh.** Our best Kazakh-specialized model
+  (`wise7-0.5`) reaches **statistical parity with it on the full corpus** — nominally ahead on
+  MRR, within noise on nDCG@10/Recall@1 — and **beats bge-m3 at 150k-corpus scale**.
+- Getting there took fixing three failure modes: naive full fine-tuning **regressed** bge-m3
+  (catastrophic forgetting); aggressive LoRA **collapsed** the space (mean cosine 0.82 vs
+  healthy 0.32); the winning recipe is **gentle LoRA (r16/α16/lr2e-5) + CachedGIST loss
+  (false-negative masking) + hard negatives mined from the full corpus + WiSE-FT weight
+  interpolation**.
+- The gap to bge-m3 went from **−0.035 → −0.0017 nDCG@10** across 7 iterations.
+- A clean, *significant* win likely needs the next lever: **in-domain synthetic doc2query**
+  training data generated from the 825k corpus itself.
 
-## Leaderboard — full corpus (825k passages), nDCG@10
+## Leaderboard — full corpus (825k passages)
 
 | Model | nDCG@10 | MRR | Recall@1 | notes |
 |---|---|---|---|---|
-| BAAI/bge-m3 (baseline) | **0.362** | 0.348 | 0.233 | zero-shot |
-| kaz-bge5 (gentle LoRA) | 0.3415 | 0.329 | 0.212 | no collapse; best fine-tune so far |
-| kaz-bge2 (full fine-tune) | 0.327 | 0.314 | 0.196 | catastrophic forgetting |
+| BAAI/bge-m3 (baseline) | **0.3619** | 0.3485 | **0.2333** | zero-shot SOTA |
+| **wise7-0.5** (ours, best) | 0.3602 | **0.3487** | 0.2317 | GIST + more data + WiSE-FT; **parity, MRR-ahead** |
+| wise6-0.7 | 0.3584 | 0.3444 | 0.2255 | GIST + WiSE-FT |
+| kaz-bge6 (GIST LoRA) | 0.3530 | 0.3390 | 0.2198 | GIST, α=1 |
+| kaz-bge5 (gentle LoRA) | 0.3415 | 0.3285 | 0.2115 | no collapse |
+| kaz-bge2 (full fine-tune) | 0.3268 | 0.3136 | 0.1965 | catastrophic forgetting |
 
-Also fine-tuned **kaz-e5** which **beats its own base** `intfloat/multilingual-e5-large`
-(a weaker base) on Kazakh — fine-tuning helps a weak base, but bge-m3 is a higher bar.
+At a 150k-passage corpus, our WiSE-FT models **beat** bge-m3 (e.g. 0.6672 vs 0.6640 nDCG@10).
+Also fine-tuned **kaz-e5** which **beats its own base** `intfloat/multilingual-e5-large`.
+Differences at the top are within noise (±0.002 over 1929 queries) — a defensible "beats"
+claim needs paired-bootstrap significance over ≥3 seeds.
 
 ## What's in here
 
